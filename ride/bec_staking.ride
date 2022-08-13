@@ -1,0 +1,107 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let ownerKey = "owner"
+let initAtBlockKey = "initialized_at_block"
+let distributeInBlocksKey = "distribute_in_blocks"
+
+let owner = this.getStringValue(ownerKey).addressFromStringValue()
+let BEC = base58'Ehie5xYpeN8op1Cctc6aGUrqx8jq3jtf1DSjXDbfm7aT'
+let USDT = base58'DG2xFkPdDwKUoBkzGAhQtLpSGzfXLiCYPEzeKH2Ad24p'
+
+func writeConstInt(key: String, value: Int) = if !isDefined(getInteger(this, key)) then IntegerEntry(key, value) else throw("already initialized: " + key)
+
+# admin operations functions
+
+@Callable(i)
+func initialize(distributeInBlocks: Int) = {
+  [
+    initAtBlockKey.writeConstInt(height),
+    IntegerEntry(distributeInBlocksKey, distributeInBlocks),
+    StringEntry(ownerKey, toBase58String(i.caller.bytes))
+  ]
+}
+
+@Callable(i)
+func deposit() = {
+  if (i.caller != owner) then throw("access denied, only admin can deposit")
+  else if i.payments.size() == 0 then throw("Attached payment is required") 
+  else {
+    let pmt = i.payments[0];
+    if (pmt.assetId == unit || pmt.assetId != USDT)
+      then throw("unexpected assetId, expected: " + USDT.toUtf8String())
+    else []
+  }
+}
+
+@Callable(i)
+func setOwner(newOwner: String) = {
+  if (i.caller != owner) then throw("access denied, only admin transfer ownership")
+  else [
+    StringEntry(ownerKey, newOwner)
+  ]
+}
+
+@Callable(i)
+func setDistributeInBlocks(newValue: Int) = {
+  if (i.caller != owner) then throw("access denied, only admin set the duration")
+  else [
+    IntegerEntry(distributeInBlocksKey, newValue)
+  ]
+}
+
+# @Callable(i)
+# func withdraw(amount: Int) = {
+#   let currentKey = toBase58String(i.caller.bytes)
+#   let currentAmount = match getInteger(this, currentKey) {
+#     case a:Int => a
+#     case _ => 0
+#   }
+#   let newAmount = currentAmount - amount
+#   if (amount < 0)
+#     then throw("Can't withdraw negative amount")
+#     else if (newAmount < 0)
+#       then throw("Not enough balance")
+#       else (
+#         [
+#           IntegerEntry(currentKey, newAmount),
+#           ScriptTransfer(i.caller, amount, unit)
+#         ],
+#         unit
+#       )
+# }
+
+# exact 1 payment must be attached in BEC
+@Callable(i)
+func stake() = {
+ []
+}
+
+# amount - how much BEC tokens will be unstaked, and rewards will be claimed
+@Callable(i)
+func unstake(amount: Int) = {
+  []
+}
+
+# called by user to claim rewards accumulated
+@Callable(i)
+func claimReward() = {
+  []
+}
+
+# utility method to get unclaimed user's rewards
+@Callable(i)
+func unclaimedRewards(userAddressStr: String) = {
+  []
+}
+
+# Staking params for user
+# [userBECAmount, totalBECStaked, stakingStartHeight)
+@Callable(i)
+func becStaking(userAddressStr: String) = {
+  []
+}
+
+@Verifier(tx)
+func verify() = false
