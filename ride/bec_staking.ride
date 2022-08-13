@@ -2,11 +2,20 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let ownerKey = "owner"
-let initAtBlockKey = "initialized_at_block"
-let distributeInBlocksKey = "distribute_in_blocks"
+# constants
+let separator = "__"
+let SEP = "__"
+let MULT6 = 1_000_000
+let MULT8 = 1_0000_0000
+let MULTX6 = MULT6.toBigInt()
+let MULTX8 = MULT8.toBigInt()
 
-let owner = this.getStringValue(ownerKey).addressFromStringValue()
+# contract key
+let keyOwner = "owner"
+let keyInitHeight = "initialized_height"
+let keyRewardPayouts = "reward_payouts" # in blocks
+
+let owner = this.getStringValue(keyOwner).addressFromStringValue()
 let BEC = base58'Ehie5xYpeN8op1Cctc6aGUrqx8jq3jtf1DSjXDbfm7aT'
 let USDT = base58'DG2xFkPdDwKUoBkzGAhQtLpSGzfXLiCYPEzeKH2Ad24p'
 
@@ -15,18 +24,22 @@ func writeConstInt(key: String, value: Int) = if !isDefined(getInteger(this, key
 # admin operations functions
 
 @Callable(i)
-func initialize(distributeInBlocks: Int) = {
-  [
-    initAtBlockKey.writeConstInt(height),
-    IntegerEntry(distributeInBlocksKey, distributeInBlocks),
-    StringEntry(ownerKey, toBase58String(i.caller.bytes))
+func initialize(rewardPayoutsDistribution: Int) = {
+  if (rewardPayoutsDistribution <= 0) 
+    then throw("reward payouts distribution can not be negative")
+  else [
+    keyInitHeight.writeConstInt(height),
+    IntegerEntry(keyRewardPayouts, rewardPayoutsDistribution),
+    StringEntry(keyOwner, toBase58String(i.caller.bytes))
   ]
 }
 
 @Callable(i)
 func deposit() = {
-  if (i.caller != owner) then throw("access denied, only admin can deposit")
-  else if i.payments.size() == 0 then throw("Attached payment is required") 
+  if (i.caller != owner) 
+    then throw("access denied, only owner can deposit")
+  else if (i.payments.size() == 0) 
+    then throw("Attached payment is required") 
   else {
     let pmt = i.payments[0];
     if (pmt.assetId == unit || pmt.assetId != USDT)
@@ -37,17 +50,23 @@ func deposit() = {
 
 @Callable(i)
 func setOwner(newOwner: String) = {
-  if (i.caller != owner) then throw("access denied, only admin transfer ownership")
+  if (i.caller != owner) 
+    then throw("access denied, only owner can transfer ownership")
+  else if (addressFromStringValue(newOwner) == owner) 
+    then throw("can set to the same address")
   else [
-    StringEntry(ownerKey, newOwner)
+    StringEntry(keyOwner, newOwner)
   ]
 }
 
 @Callable(i)
-func setDistributeInBlocks(newValue: Int) = {
-  if (i.caller != owner) then throw("access denied, only admin set the duration")
+func setRewardPayout(newValue: Int) = {
+  if (i.caller != owner) 
+    then throw("access denied, only admin set the duration")
+  else if (newValue <= 0) 
+    then throw("reward payouts distribution can not be negative")
   else [
-    IntegerEntry(distributeInBlocksKey, newValue)
+    IntegerEntry(keyRewardPayouts, newValue)
   ]
 }
 
