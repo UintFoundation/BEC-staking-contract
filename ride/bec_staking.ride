@@ -16,8 +16,8 @@ let keyInitHeight = "initialized_height"
 let keyRewardPayouts = "reward_payouts" # in blocks
 
 let owner = this.getStringValue(keyOwner).addressFromStringValue()
-let BEC = base58'Ehie5xYpeN8op1Cctc6aGUrqx8jq3jtf1DSjXDbfm7aT'
-let USDT = base58'DG2xFkPdDwKUoBkzGAhQtLpSGzfXLiCYPEzeKH2Ad24p'
+let BEC = base58'E3mLbKed5sHhtRn4aSCdZWy53CBhLiY934MN5ZksoWZY'
+let USDT = base58'34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ'
 
 func writeConstInt(key: String, value: Int) = if !isDefined(getInteger(this, key)) then IntegerEntry(key, value) else throw("already initialized: " + key)
 
